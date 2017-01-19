@@ -1,0 +1,55 @@
+{
+  "project_info": {
+    "project_number": "716927714065",
+    "firebase_url": "https://parkeasy-37469.firebaseio.com",
+    "project_id": "parkeasy-37469",
+    "storage_bucket": "parkeasy-37469.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:716927714065:android:600344a7201178d0",
+        "android_client_info": {
+          "package_name": "com.pingala.parkeasy"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "716927714065-rrk2fhfc6fntoimbpej4nadfn25h31hj.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.pingala.parkeasy",
+            "certificate_hash": "E832C3E4F2D5AFD37EEDF33826636066ED63E9A0"
+          }
+        },
+        {
+          "client_id": "716927714065-ai686e053jmp5o8to3cm8576ukj1ktlr.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDhKxCGENUtQ_bXMx7QuWtVMEJHpjPdnJU"
+        }
+      ],
+      "services": {
+        "analytics_service": {
+          "status": 1
+        },
+        "appinvite_service": {
+          "status": 2,
+          "other_platform_oauth_client": [
+            {
+              "client_id": "716927714065-ai686e053jmp5o8to3cm8576ukj1ktlr.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        },
+        "ads_service": {
+          "status": 2
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
