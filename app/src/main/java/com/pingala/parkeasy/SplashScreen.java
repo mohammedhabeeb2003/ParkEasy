@@ -1,97 +1,92 @@
 package com.pingala.parkeasy;
 
-import android.*;
 import android.Manifest;
 import android.app.Activity;
 import android.app.AlertDialog;
+import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.location.Location;
+import android.location.LocationManager;
+import android.location.LocationProvider;
 import android.net.Uri;
+import android.os.AsyncTask;
 import android.os.Handler;
+import android.provider.Settings;
 import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
-import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
-import android.widget.ProgressBar;
+import android.widget.Toast;
 
-import com.google.firebase.auth.FirebaseAuth;
-import com.google.firebase.auth.FirebaseUser;
-import com.google.firebase.database.ChildEventListener;
-import com.google.firebase.database.DataSnapshot;
-import com.google.firebase.database.DatabaseError;
-import com.pingala.parkeasy.adapter.MessageAdapter;
-import com.pingala.parkeasy.model.FriendlyMessage;
+import com.google.android.gms.common.ConnectionResult;
+import com.google.android.gms.common.api.GoogleApiClient;
+import com.google.android.gms.location.LocationListener;
+import com.google.android.gms.location.LocationRequest;
+import com.google.android.gms.location.LocationServices;
+import com.google.android.gms.maps.model.LatLng;
 
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-public class SplashScreen extends Activity {
+public class SplashScreen extends Activity{
 
     public static final int REQUEST_ID_MULTIPLE_PERMISSIONS = 1;
-    private static int SPLASH_TIME_OUT = 2000;
+
     private String TAG = "tag";
-    private ChildEventListener mChildEventListener;
-    private String mUsername;
-    private FirebaseAuth mAuth;
-    private FirebaseAuth.AuthStateListener mAuthStateListener;
-    private MessageAdapter mMessageAdapter;
+
+    private GpsTool gpsTool;
+
+    private LocationManager locationManager;
+    String locationProvider = LocationManager.GPS_PROVIDER;
+
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.splash_screen);
-        mAuth = FirebaseAuth.getInstance();
         if(checkAndRequestPermissions()) {
-         /*   mAuthStateListener = new FirebaseAuth.AuthStateListener() {
-                @Override
-                public void onAuthStateChanged(@NonNull FirebaseAuth firebaseAuth) {
-                    FirebaseUser user = firebaseAuth.getCurrentUser();
-                    if (user != null) {
-                        // User is signed in
-                        onSignedInInitialize(user.getDisplayName());
-                    } else {
-                        // User is signed out
-                        onSignedOutCleanup();
-                        startActivityForResult(
-                                AuthUI.getInstance()
-                                        .createSignInIntentBuilder()
-                                        .setIsSmartLockEnabled(false)
-                                        .setProviders(
-                                                AuthUI.EMAIL_PROVIDER,
-                                                AuthUI.GOOGLE_PROVIDER)
-                                        .build(),
-                                RC_SIGN_IN);
+            locationManager = (LocationManager)getSystemService(Context.LOCATION_SERVICE);
+
+            if(locationManager.isProviderEnabled(locationProvider)==true) {
+                gpsTool = new GpsTool(this) {
+
+                    @Override
+                    public void onLocationChanged(Location location) {
+                        super.onLocationChanged(location);
+                        if (location != null) {
+                            lat = location.getLatitude();
+                            lon = location.getLongitude();
+                            Log.e("Lat", "Lon" + lat + lon);
+                            if(lat!=0.0){
+                                Intent i = new Intent(SplashScreen.this,MapsActivity.class);
+                                i.putExtra("calculated_Lat",lat);
+                                i.putExtra("calculated_Lon",lon);
+                                startActivity(i);
+                                finishAffinity();
+                            }
+                        }
+
+
                     }
-                }
-            };
-        }*/
+                };
 
-            // carry on the normal flow, as the case of  permissions  granted.
-            new Handler().postDelayed(new Runnable() {
-                @Override
-                public void run() {
-                    // This method will be executed once the timer is over
-                    // Start your app main activity
-
-                    Intent i = new Intent(SplashScreen.this, MapsActivity.class);
-                    startActivity(i);
-
-                    // close this activity
-                    finish();
-                }
-            }, SPLASH_TIME_OUT);
+            }
+            else{
+                Intent intent = new Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS);
+                startActivity(intent);
+            }
         }
     }
 
     private  boolean checkAndRequestPermissions() {
         int gpspermission = ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION);
         int permissionLocation = ContextCompat.checkSelfPermission(this,Manifest.permission.ACCESS_FINE_LOCATION);
-
-
 
         List<String> listPermissionsNeeded = new ArrayList<>();
 
@@ -195,27 +190,5 @@ public class SplashScreen extends Activity {
         dialog.show();
     }
 
-
-   /* private void onSignedInInitialize(String username) {
-        mUsername = username;
-        attachDatabaseReadListener();
-    }
-    private void attachDatabaseReadListener() {
-        if (mChildEventListener == null) {
-            mChildEventListener = new ChildEventListener() {
-                @Override
-                public void onChildAdded(DataSnapshot dataSnapshot, String s) {
-                    FriendlyMessage friendlyMessage = dataSnapshot.getValue(FriendlyMessage.class);
-                    mMessageAdapter.add(friendlyMessage);
-                }
-
-                public void onChildChanged(DataSnapshot dataSnapshot, String s) {}
-                public void onChildRemoved(DataSnapshot dataSnapshot) {}
-                public void onChildMoved(DataSnapshot dataSnapshot, String s) {}
-                public void onCancelled(DatabaseError databaseError) {}
-            };
-            mMessagesDatabaseReference.addChildEventListener(mChildEventListener);
-        }
-    }*/
 
 }
