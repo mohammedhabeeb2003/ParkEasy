@@ -44,45 +44,50 @@ public class SplashScreen extends Activity{
 
     private LocationManager locationManager;
     String locationProvider = LocationManager.GPS_PROVIDER;
-
+    double latitude;
+    double longitude;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.splash_screen);
-        if(checkAndRequestPermissions()) {
-            locationManager = (LocationManager)getSystemService(Context.LOCATION_SERVICE);
 
-            if(locationManager.isProviderEnabled(locationProvider)==true) {
+        if (checkAndRequestPermissions()) {
+            locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
+
+            if (locationManager.isProviderEnabled(locationProvider) == true) {
+
+
                 gpsTool = new GpsTool(this) {
 
                     @Override
                     public void onLocationChanged(Location location) {
                         super.onLocationChanged(location);
                         if (location != null) {
+
                             lat = location.getLatitude();
                             lon = location.getLongitude();
-                            Log.e("Lat", "Lon" + lat + lon);
-                            if(lat!=0.0){
-                                Intent i = new Intent(SplashScreen.this,MapsActivity.class);
-                                i.putExtra("calculated_Lat",lat);
-                                i.putExtra("calculated_Lon",lon);
+                            latitude = lat;
+                            longitude = lon;
+                            Log.e("Lat", "Lon" + lat + lon + "Latitude" + latitude + "Longitude" + longitude);
+                            if (latitude != 0.0) {
+                                Intent i = new Intent(SplashScreen.this, MapsActivity.class);
+                                i.putExtra("calculated_Lat", latitude);
+                                i.putExtra("calculated_Lon", longitude);
                                 startActivity(i);
                                 finishAffinity();
                             }
                         }
-
-
                     }
                 };
 
-            }
-            else{
+            } else {
                 Intent intent = new Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS);
                 startActivity(intent);
             }
         }
     }
+
 
     private  boolean checkAndRequestPermissions() {
         int gpspermission = ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION);

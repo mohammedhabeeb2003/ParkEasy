@@ -8,10 +8,19 @@ import java.util.ArrayList;
 
 public class Slot extends ArrayList<Slot> {
 
-    boolean booked;
+    boolean booked=false;
     String carNo;
     String slotName;
     String time;
+    String admins;
+
+    public String getAdmins() {
+        return admins;
+    }
+
+    public void setAdmins(String admins) {
+        this.admins = admins;
+    }
 
     public Slot() {
     }

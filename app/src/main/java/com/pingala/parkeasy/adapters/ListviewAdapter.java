@@ -53,7 +53,7 @@ public class ListviewAdapter extends ArrayAdapter {
         else
         holder =(ViewHolder)v.getTag();
 
-        holder.tv_header.setText(gridHeaders.get(position).getFloors());
+        holder.tv_header.setText("Floor"+" "+gridHeaders.get(position).getFloors());
 /*
         GridAdapter ga = new GridAdapter(context,slotList.get(position))
 */

@@ -1,10 +1,13 @@
 package com.pingala.parkeasy;
 
 import android.app.ProgressDialog;
+import android.content.Intent;
 import android.os.AsyncTask;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
+import android.view.View;
+import android.widget.AdapterView;
 import android.widget.ListView;
 import android.widget.Toast;
 
@@ -32,14 +35,13 @@ public class FloorsActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_floors);
-       lv_home = (ListView)findViewById(R.id.lv_home);
+        lv_home = (ListView)findViewById(R.id.lv_home);
+
         title = getIntent().getStringExtra("Title");
+        this.getSupportActionBar().setTitle(title);
         firebaseLink = getIntent().getStringExtra("FirebaseLink");
         Log.e("FirebaseLink",""+firebaseLink);
         new AsyncTaskFloors().execute();
-
-
-
     }
     class AsyncTaskFloors extends AsyncTask<Void,Void,Void> {
 
@@ -52,7 +54,6 @@ public class FloorsActivity extends AppCompatActivity {
         protected void onPreExecute() {
             super.onPreExecute();
             pd = new ProgressDialog(FloorsActivity.this);
-
             pd.show();
 
         }
@@ -68,18 +69,22 @@ public class FloorsActivity extends AppCompatActivity {
                      gridHeaders = new ArrayList<GridHeader>();
                      slotList = new ArrayList<ArrayList<Slot>>();
                      slots = new ArrayList<Slot>();
-                    int position = 0;
                     for(DataSnapshot data : dataSnapshot.getChildren()){
                         String floorName =  data.child("FloorName").getValue(String.class);
                         DataSnapshot datachild = data.child("Slots");
                         for(DataSnapshot datachild1 : datachild.getChildren()){
-                         Boolean booked =   datachild1.child("Booked").getValue(Boolean.class);
-                            String slotName = datachild1.child("SlotName").getValue(String.class);
-                            Slot sl = new Slot();
-                            sl.setBooked(booked);
-                            sl.setSlotName(slotName);
+                            try {
+                                Boolean booked = datachild1.child("Booked").getValue(Boolean.class);
+                                String slotName = datachild1.child("SlotName").getValue(String.class);
+                                Slot sl = new Slot();
+                                sl.setBooked(booked);
+                                sl.setSlotName(slotName);
 
-                            slots.add(sl);
+                                slots.add(sl);
+                            }
+                            catch (Exception e){
+
+                            }
 
                         }
 
@@ -110,7 +115,15 @@ public class FloorsActivity extends AppCompatActivity {
         @Override
         protected void onPostExecute(Void aVoid) {
             super.onPostExecute(aVoid);
-
+           lv_home.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+               @Override
+               public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+                     Intent i = new Intent(FloorsActivity.this,ParkingArea.class);
+                     i.putExtra("ParkingArea",firebaseLink+"/"+position+"/"+"Slots");
+                     i.putExtra("FloorNo",gridHeaders.get(position).getFloors());
+                     startActivity(i);
+               }
+           });
 
         }
     }

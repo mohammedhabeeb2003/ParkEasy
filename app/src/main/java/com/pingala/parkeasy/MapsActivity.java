@@ -9,13 +9,16 @@ import android.location.Geocoder;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Handler;
+import android.support.annotation.NonNull;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.FragmentActivity;
 import android.util.Log;
 import android.view.View;
 import android.widget.EditText;
+import android.widget.Toast;
 
 
+import com.firebase.ui.auth.AuthUI;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
@@ -23,6 +26,8 @@ import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
@@ -39,15 +44,48 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     private GoogleMap mMap;
     ArrayList<ParkingLots> parkingLotList;
     SupportMapFragment mapFragment;
+    private FirebaseAuth mFirebaseAuth;
+    private FirebaseAuth.AuthStateListener  mAuthStateListner;
+    public static final int RC_SIGN_IN = 1;
+    double latitude;
+    double longitude;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_maps);
-        new MarkerAsync1().execute();
-        // Obtain the SupportMapFragment and get notified when the map is ready to be used.
-       mapFragment = (SupportMapFragment) getSupportFragmentManager()
+        latitude =  getIntent().getDoubleExtra("calculated_Lat",0.0);
+        longitude =  getIntent().getDoubleExtra("calculated_Lon",0.0);
+        mFirebaseAuth = FirebaseAuth.getInstance();
+        mapFragment = (SupportMapFragment) getSupportFragmentManager()
                 .findFragmentById(R.id.map);
-        mapFragment.getMapAsync(this);
+        mAuthStateListner = new FirebaseAuth.AuthStateListener() {
+            @Override
+            public void onAuthStateChanged(@NonNull FirebaseAuth firebaseAuth) {
+
+                FirebaseUser user = firebaseAuth.getCurrentUser();
+                if(user !=null){
+
+                    //user is Sign In
+                    new MarkerAsync1().execute();
+                    // Obtain the SupportMapFragment and get notified when the map is ready to be used.
+                    mapFragment.getMapAsync(MapsActivity.this);
+
+                }
+                else{
+                    //user is Sign Out
+                    startActivityForResult(
+                            AuthUI.getInstance()
+                                    .createSignInIntentBuilder()
+                                    .setIsSmartLockEnabled(false)
+                                    .setProviders(
+                                            AuthUI.EMAIL_PROVIDER,
+                                            AuthUI.GOOGLE_PROVIDER)
+                                    .build(),
+                            RC_SIGN_IN);
+                }
+            }
+        };
 
     }
 
@@ -74,18 +112,12 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     @Override
     public void onMapReady(GoogleMap googleMap) {
         mMap = googleMap;
-        double lat = getIntent().getDoubleExtra("calculated_Lat",0.0);
-        double lon = getIntent().getDoubleExtra("calculated_Lon",0.0);
+        double lat = latitude;
+        double lon = longitude;
         // Add a marker in Sydney and move the camera
         LatLng sydney = new LatLng(lat, lon);
         mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(sydney,12.f));
-
-
-
-
-        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
-            return;
-        }
+        mMap.animateCamera(CameraUpdateFactory.newLatLng(sydney));
         mMap.setMyLocationEnabled(true);
 
     }
@@ -105,11 +137,11 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                 public void onDataChange(DataSnapshot dataSnapshot) {
                     for(DataSnapshot data : dataSnapshot.getChildren()){
 
-
-                        Double lat = data.child("Lat").getValue(Double.class);
-                        Double lon = data.child("Long").getValue(Double.class);
-                        String name = data.child("Name").getValue(String.class);
                         try {
+                            Double lat = data.child("Lat").getValue(Double.class);
+                            Double lon = data.child("Long").getValue(Double.class);
+                            String name = data.child("Name").getValue(String.class);
+
                             ParkingLots pl = new ParkingLots();
                             pl.setLat(lat);
                             pl.setLon(lon);
@@ -117,10 +149,10 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
                             parkingLotList.add(pl);
                         }
-                        catch (NumberFormatException e){
+                        catch (Exception e){
 
                         }
-                    Log.e("Parking","Size ="+parkingLotList.size());
+                        Log.e("Parking","Size ="+parkingLotList.size());
 
                     }
 
@@ -130,9 +162,9 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                             mMap.setOnInfoWindowClickListener(new GoogleMap.OnInfoWindowClickListener() {
                                 @Override
                                 public void onInfoWindowClick(Marker marker) {
-                                String title =    marker.getTitle();
+                                    String title =    marker.getTitle();
 
-                               Intent i = new Intent(MapsActivity.this,FloorsActivity.class);
+                                    Intent i = new Intent(MapsActivity.this,FloorsActivity.class);
                                     i.putExtra("Title",title);
                                     i.putExtra("FirebaseLink","https://parkeasy-37469.firebaseio.com/ParkEasy/Floors/"+title);
                                     startActivity(i);
@@ -166,7 +198,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
     @Override
     public void onBackPressed() {
-       finish();
+        finishAffinity();
     }
 
     @Override
@@ -178,15 +210,54 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
     @Override
     protected void onPause() {
-
-       mapFragment.onDetach();
         super.onPause();
+        mFirebaseAuth.removeAuthStateListener(mAuthStateListner);
+        getSupportFragmentManager().beginTransaction().detach(mapFragment).commit();
     }
 
     @Override
     protected void onStop() {
-
         super.onStop();
     }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        mFirebaseAuth.addAuthStateListener(mAuthStateListner);
+        if(mapFragment.isDetached()==true){
+           /* Toast.makeText(this, "mapFragmetn Null", Toast.LENGTH_SHORT).show();*/
+            /*mAuthStateListner = new FirebaseAuth.AuthStateListener() {
+                @Override
+                public void onAuthStateChanged(@NonNull FirebaseAuth firebaseAuth) {
+
+                    FirebaseUser user = firebaseAuth.getCurrentUser();
+                    if(user !=null){
+                        latitude =  getIntent().getDoubleExtra("calculated_Lat",0.0);
+                        longitude =  getIntent().getDoubleExtra("calculated_Lon",0.0);
+                        //user is Sign In
+                        new MarkerAsync1().execute();
+                        // Obtain the SupportMapFragment and get notified when the map is ready to be used.
+
+                        mapFragment.getMapAsync(MapsActivity.this);
+
+                    }
+                    else{
+                        //user is Sign Out
+                        startActivityForResult(
+                                AuthUI.getInstance()
+                                        .createSignInIntentBuilder()
+                                        .setIsSmartLockEnabled(false)
+                                        .setProviders(
+                                                AuthUI.EMAIL_PROVIDER,
+                                                AuthUI.GOOGLE_PROVIDER)
+                                        .build(),
+                                RC_SIGN_IN);
+                    }
+                }
+            };*/
+            startActivity(getIntent());
+        }
+    }
+
 }
 
