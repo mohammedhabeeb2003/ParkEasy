@@ -4,14 +4,14 @@
     android:layout_height="match_parent"
     android:gravity="center">
 <RelativeLayout
-    android:layout_width="wrap_content"
+    android:layout_width="100dp"
     android:layout_height="wrap_content">
     <ToggleButton
-        android:layout_width="100dp"
+        android:layout_width="wrap_content"
          android:id="@+id/tg_booking"
         android:layout_height="100dp"
         android:background="@drawable/buttonbackground"
-        android:paddingLeft="10dp"
+        android:textAlignment="center"
         android:layout_centerHorizontal="true"
         android:gravity="center"
         android:clickable="false"

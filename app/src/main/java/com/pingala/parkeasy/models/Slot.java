@@ -13,6 +13,7 @@ public class Slot extends ArrayList<Slot> {
     String slotName;
     String time;
     String admins;
+    String timestamp;
 
     public String getAdmins() {
         return admins;
@@ -23,6 +24,14 @@ public class Slot extends ArrayList<Slot> {
     }
 
     public Slot() {
+    }
+
+    public String getTimestamp() {
+        return timestamp;
+    }
+
+    public void setTimestamp(String timestamp) {
+        this.timestamp = timestamp;
     }
 
     public Slot(boolean booked, String carNo, String slotName, String time) {

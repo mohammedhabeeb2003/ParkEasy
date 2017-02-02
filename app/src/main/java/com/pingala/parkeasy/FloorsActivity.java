@@ -3,15 +3,13 @@ package com.pingala.parkeasy;
 import android.app.ProgressDialog;
 import android.content.Intent;
 import android.os.AsyncTask;
-import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ListView;
-import android.widget.Toast;
 
-import com.google.firebase.database.ChildEventListener;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
@@ -35,21 +33,24 @@ public class FloorsActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_floors);
-        lv_home = (ListView)findViewById(R.id.lv_home);
-
+        lv_home = (ListView) findViewById(R.id.lv_home);
+        //Getting title from MapActivity
         title = getIntent().getStringExtra("Title");
         this.getSupportActionBar().setTitle(title);
         firebaseLink = getIntent().getStringExtra("FirebaseLink");
-        Log.e("FirebaseLink",""+firebaseLink);
+        Log.e("FirebaseLink", "" + firebaseLink);
         new AsyncTaskFloors().execute();
     }
-    class AsyncTaskFloors extends AsyncTask<Void,Void,Void> {
+
+    //Background to populate Number of Floor List
+    class AsyncTaskFloors extends AsyncTask<Void, Void, Void> {
 
         ProgressDialog pd;
         FirebaseDatabase database;
         DatabaseReference myRef;
         DatabaseReference myRefChild;
         ListviewAdapter lv;
+
         @Override
         protected void onPreExecute() {
             super.onPreExecute();
@@ -58,21 +59,23 @@ public class FloorsActivity extends AppCompatActivity {
 
         }
 
+        //
         @Override
         protected Void doInBackground(Void... params) {
+            //Populate Listview by getting data from database
             database = FirebaseDatabase.getInstance();
             myRef = database.getReferenceFromUrl(firebaseLink);
             myRef.addValueEventListener(new ValueEventListener() {
 
                 @Override
                 public void onDataChange(DataSnapshot dataSnapshot) {
-                     gridHeaders = new ArrayList<GridHeader>();
-                     slotList = new ArrayList<ArrayList<Slot>>();
-                     slots = new ArrayList<Slot>();
-                    for(DataSnapshot data : dataSnapshot.getChildren()){
-                        String floorName =  data.child("FloorName").getValue(String.class);
+                    gridHeaders = new ArrayList<GridHeader>();
+                    slotList = new ArrayList<ArrayList<Slot>>();
+                    slots = new ArrayList<Slot>();
+                    for (DataSnapshot data : dataSnapshot.getChildren()) {
+                        String floorName = data.child("FloorName").getValue(String.class);
                         DataSnapshot datachild = data.child("Slots");
-                        for(DataSnapshot datachild1 : datachild.getChildren()){
+                        for (DataSnapshot datachild1 : datachild.getChildren()) {
                             try {
                                 Boolean booked = datachild1.child("Booked").getValue(Boolean.class);
                                 String slotName = datachild1.child("SlotName").getValue(String.class);
@@ -81,8 +84,7 @@ public class FloorsActivity extends AppCompatActivity {
                                 sl.setSlotName(slotName);
 
                                 slots.add(sl);
-                            }
-                            catch (Exception e){
+                            } catch (Exception e) {
 
                             }
 
@@ -96,10 +98,10 @@ public class FloorsActivity extends AppCompatActivity {
 
                     }
 
-                    lv = new ListviewAdapter(getApplicationContext(),R.layout.grid_row_list,gridHeaders,slotList);
+                    lv = new ListviewAdapter(getApplicationContext(), R.layout.grid_row_list, gridHeaders, slotList);
                     lv_home.setAdapter(lv);
                     pd.dismiss();
-                    Log.e("gridHeader",""+gridHeaders.size());
+                    Log.e("gridHeader", "" + gridHeaders.size());
 
                 }
 
@@ -115,15 +117,17 @@ public class FloorsActivity extends AppCompatActivity {
         @Override
         protected void onPostExecute(Void aVoid) {
             super.onPostExecute(aVoid);
-           lv_home.setOnItemClickListener(new AdapterView.OnItemClickListener() {
-               @Override
-               public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-                     Intent i = new Intent(FloorsActivity.this,ParkingArea.class);
-                     i.putExtra("ParkingArea",firebaseLink+"/"+position+"/"+"Slots");
-                     i.putExtra("FloorNo",gridHeaders.get(position).getFloors());
-                     startActivity(i);
-               }
-           });
+            //OnClick go to Parking area activity with Parking Area Name,Floor No and Buliding Name
+            lv_home.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+                @Override
+                public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+                    Intent i = new Intent(FloorsActivity.this, ParkingArea.class);
+                    i.putExtra("ParkingArea", firebaseLink + "/" + position + "/" + "Slots");
+                    i.putExtra("FloorNo", "Floor :" + gridHeaders.get(position).getFloors());
+                    i.putExtra("TitleMain", title);
+                    startActivity(i);
+                }
+            });
 
         }
     }

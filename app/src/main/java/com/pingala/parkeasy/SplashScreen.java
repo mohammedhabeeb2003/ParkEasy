@@ -9,32 +9,19 @@ import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.location.Location;
 import android.location.LocationManager;
-import android.location.LocationProvider;
 import android.net.Uri;
-import android.os.AsyncTask;
-import android.os.Handler;
+import android.os.Bundle;
 import android.provider.Settings;
-import android.support.annotation.NonNull;
-import android.support.annotation.Nullable;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
-import android.os.Bundle;
 import android.util.Log;
-import android.widget.Toast;
-
-import com.google.android.gms.common.ConnectionResult;
-import com.google.android.gms.common.api.GoogleApiClient;
-import com.google.android.gms.location.LocationListener;
-import com.google.android.gms.location.LocationRequest;
-import com.google.android.gms.location.LocationServices;
-import com.google.android.gms.maps.model.LatLng;
 
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-public class SplashScreen extends Activity{
+public class SplashScreen extends Activity {
 
     public static final int REQUEST_ID_MULTIPLE_PERMISSIONS = 1;
 
@@ -51,26 +38,25 @@ public class SplashScreen extends Activity{
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.splash_screen);
-
+        //On Start checking for permission
         if (checkAndRequestPermissions()) {
             locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
-
+            //Makesure GPS is On
             if (locationManager.isProviderEnabled(locationProvider) == true) {
-
-
+                //Getting Longitude and latitude
                 gpsTool = new GpsTool(this) {
-
                     @Override
                     public void onLocationChanged(Location location) {
                         super.onLocationChanged(location);
+                        //Make Sure Location is not Null
                         if (location != null) {
-
                             lat = location.getLatitude();
                             lon = location.getLongitude();
                             latitude = lat;
                             longitude = lon;
                             Log.e("Lat", "Lon" + lat + lon + "Latitude" + latitude + "Longitude" + longitude);
                             if (latitude != 0.0) {
+                                //send data to MapActivity
                                 Intent i = new Intent(SplashScreen.this, MapsActivity.class);
                                 i.putExtra("calculated_Lat", latitude);
                                 i.putExtra("calculated_Lon", longitude);
@@ -82,16 +68,17 @@ public class SplashScreen extends Activity{
                 };
 
             } else {
+                //If GPS is Disable this activity will be open
                 Intent intent = new Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS);
                 startActivity(intent);
             }
         }
     }
 
-
-    private  boolean checkAndRequestPermissions() {
+   //Runtime Permission for Marshmallow
+    private boolean checkAndRequestPermissions() {
         int gpspermission = ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION);
-        int permissionLocation = ContextCompat.checkSelfPermission(this,Manifest.permission.ACCESS_FINE_LOCATION);
+        int permissionLocation = ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION);
 
         List<String> listPermissionsNeeded = new ArrayList<>();
 
@@ -126,7 +113,7 @@ public class SplashScreen extends Activity{
                     for (int i = 0; i < permissions.length; i++)
                         perms.put(permissions[i], grantResults[i]);
                     // Check for both permissions
-                    if (perms.get(Manifest.permission.ACCESS_COARSE_LOCATION) == PackageManager.PERMISSION_GRANTED && perms.get(Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED){
+                    if (perms.get(Manifest.permission.ACCESS_COARSE_LOCATION) == PackageManager.PERMISSION_GRANTED && perms.get(Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
                         Log.d(TAG, "sms & location services permission granted");
                         // process the normal flow
                         Intent i = new Intent(SplashScreen.this, MapsActivity.class);
@@ -167,7 +154,7 @@ public class SplashScreen extends Activity{
         }
 
     }
-
+    //If Permission Denied this AlertDialog will Open
     private void showDialogOK(String message, DialogInterface.OnClickListener okListener) {
         new AlertDialog.Builder(this)
                 .setMessage(message)
@@ -176,7 +163,8 @@ public class SplashScreen extends Activity{
                 .create()
                 .show();
     }
-    private void explain(String msg){
+
+    private void explain(String msg) {
         final android.support.v7.app.AlertDialog.Builder dialog = new android.support.v7.app.AlertDialog.Builder(this);
         dialog.setMessage(msg)
                 .setPositiveButton("Yes", new DialogInterface.OnClickListener() {
